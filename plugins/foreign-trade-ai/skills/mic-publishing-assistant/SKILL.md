@@ -1,6 +1,6 @@
 ---
 name: mic-publishing-assistant
-description: Guide authenticated business users through MIC authorization, product selection, publication preview and enqueue, task review and control, redesign feedback, and related foreign-trade platform pages. Use when the user asks about MIC login or authorization, current company or product-line scope, products available for MIC, MIC auto-publish tasks, task actions, or employee authorization reminders.
+description: Guide authenticated business users through MIC operations and turn unclear MIC questions, bugs, or requirements into evidence-backed GitHub issues. Use for MIC authorization, products, publishing tasks, task actions, business questions, problem reporting, issue status, replies, or follow-up comments.
 ---
 
 # MIC Publishing Assistant
@@ -51,6 +51,31 @@ Use the platform MCP tools as the source of truth for identity, authorization, p
 1. Use `get_mic_authorization` to identify an employee whose authorization needs action.
 2. Only an Owner may call `remind_mic_authorization`, and never for the Owner themself.
 3. Name the employee and obtain explicit confirmation before sending the reminder.
+
+## Understand MIC Questions And Problems
+
+1. Do not require the business user to know technical terms. Start from what they were trying to do and what they observed.
+2. Identify the MIC module and whether the report is a usage question, bug, or requirement. Do not call every failed operation a bug.
+3. When a task, product, or variant is mentioned, resolve it with MCP tools and use only returned identifiers and evidence. Never infer an ID from a name or URL.
+4. Separate facts returned by tools from the user's description and from AI assessment. Never present a likely cause as a confirmed cause.
+5. Ask only for information still required by `prepare_mic_issue`. Prefer one concise round of targeted questions.
+
+## Submit GitHub Issues
+
+1. Call `prepare_mic_issue` with the user's original description, classified type and module, collected business facts, and any trusted task, product, or variant ID.
+2. If `readyToSubmit` is false, ask for each item in `missingInformation`; do not call `submit_mic_issue`.
+3. When ready, show the exact returned title and body. Explain that this content will be written to the project GitHub repository.
+4. Obtain explicit confirmation for that exact draft. Then call `submit_mic_issue` with the returned `draftToken` and `confirmed: true`.
+5. If the user changes any fact or wording, call `prepare_mic_issue` again and confirm the new draft. Never reuse an old draft token for changed content.
+6. Report the created Issue number, translated status, and URL.
+
+## Track Issues And Replies
+
+1. Use `list_my_mic_issues` for "我的反馈" or progress questions. Members see their own submissions; Owners may see company submissions.
+2. Use `get_mic_issue` to show the current GitHub status and reply text. Quote technical replies faithfully before adding a clearly labeled AI explanation.
+3. Translate open to "处理中", closed/completed to "已完成", and closed/not planned to "不计划处理". Do not equate every closed Issue with a completed fix.
+4. Before `comment_mic_issue`, show the exact Issue number and comment body and obtain explicit confirmation.
+5. Do not claim that an Issue is resolved unless the latest GitHub state says so.
 
 ## Safety
 
