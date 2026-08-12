@@ -1,0 +1,23 @@
+{
+  "name": "foreign-trade-ai",
+  "version": "0.1.0+codex.20260812102115",
+  "description": "Connect Codex to the foreign-trade platform for guided MIC operations.",
+  "author": {
+    "name": "HollyDare"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "外贸 AI 助手",
+    "shortDescription": "在 Codex 中选品上品、管理任务并进入统一平台核对业务。",
+    "longDescription": "使用平台账号连接统一外贸系统，在当前公司和产品线范围内查询产品、预览并确认 MIC 上品、管理自动发布任务，同时通过统一平台页面核对完整业务数据。",
+    "developerName": "HollyDare",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "defaultPrompt": [
+      "查看我的 MIC 授权状态和待处理任务。",
+      "查找可以上架到 MIC 的产品。",
+      "打开 MIC 自动发布工作台。"
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}

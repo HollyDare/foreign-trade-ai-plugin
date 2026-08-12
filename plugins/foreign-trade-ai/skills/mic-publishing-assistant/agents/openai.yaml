@@ -1,0 +1,4 @@
+interface:
+  display_name: "MIC 上品助手"
+  short_description: "引导业务员查询产品、预览上品并管理 MIC 自动发布任务"
+  default_prompt: "使用 $mic-publishing-assistant 查看我的 MIC 授权状态和当前上品任务。"
