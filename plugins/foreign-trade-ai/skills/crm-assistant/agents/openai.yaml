@@ -1,0 +1,4 @@
+interface:
+  display_name: "CRM 助手"
+  short_description: "查询正式客户、记录活动并管理跟进任务"
+  default_prompt: "使用 $crm-assistant 查看当前产品线的正式客户和待跟进任务。"

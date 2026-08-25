@@ -1,6 +1,6 @@
 # HollyDare 外贸 AI 助手
 
-HollyDare 官方全系统 Codex 插件。插件通过统一远程 MCP 连接外贸平台，各业务系统按能力模块接入；第一版覆盖 MIC 操作、业务答疑和问题反馈闭环。
+HollyDare 官方全系统 Codex 插件。插件通过统一远程 MCP 连接外贸平台，各业务系统按能力模块接入，当前覆盖产品线、MIC、获客与 CRM 操作。
 
 ## 让 Codex 帮你安装
 
@@ -49,6 +49,9 @@ codex plugin add foreign-trade-ai@hollydare
 - 查看当前公司和产品线的获客 workspace、客户、来源批次和任务进度
 - 在明确确认后初始化或修复获客 workspace
 - 在明确确认后添加指定客户，并启动符合条件的优先客户深挖
+- 搜索当前产品线的正式客户，并查看 Customer 360、联系人、来源、活动和负责人
+- 查看本人或指定负责人的待跟进任务
+- 在明确确认后记录客户活动、创建跟进任务或完成跟进任务
 
 远程 MCP 地址：`https://hollydare.cloud/api/mcp`
 
