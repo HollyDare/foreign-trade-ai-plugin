@@ -1,0 +1,5 @@
+interface:
+  display_name: "产品线助手"
+  short_description: "查看公司产品线并在确认后创建完整产品线主数据"
+  default_prompt: "使用 $product-line-assistant 查看当前公司的产品线，并帮助我创建一条新的产品线。"
+

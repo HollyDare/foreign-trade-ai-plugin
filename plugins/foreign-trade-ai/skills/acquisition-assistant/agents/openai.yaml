@@ -1,0 +1,5 @@
+interface:
+  display_name: "获客助手"
+  short_description: "添加指定客户、启动深挖并查询获客进度"
+  default_prompt: "使用 $acquisition-assistant 查看当前产品线的获客 workspace 和客户进度。"
+
