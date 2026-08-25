@@ -52,6 +52,8 @@ codex plugin add foreign-trade-ai@hollydare
 - 搜索当前产品线的正式客户，并查看 Customer 360、联系人、来源、活动和负责人
 - 查看本人或指定负责人的待跟进任务
 - 在明确确认后记录客户活动、创建跟进任务或完成跟进任务
+- 查看业务机会及其当前重点，并在明确确认后创建或更新机会
+- 检查业务机会进入 ERP 销售订单前的就绪条件和缺失证据
 
 远程 MCP 地址：`https://hollydare.cloud/api/mcp`
 
