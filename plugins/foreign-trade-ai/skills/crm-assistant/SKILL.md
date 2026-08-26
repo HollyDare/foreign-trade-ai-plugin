@@ -1,6 +1,6 @@
 ---
 name: crm-assistant
-description: Guide authenticated business users through controlled acquisition-candidate admission, formal CRM customers, Gmail or Outlook message archival, follow-up tasks, flexible business opportunities, and evidence-based ERP order-entry readiness in the current product line.
+description: Guide authenticated business users through controlled acquisition-candidate admission, formal CRM customers, Gmail or Outlook message archival, follow-up tasks, flexible business opportunities, sample versions, feedback and shipments, and evidence-based ERP order-entry readiness in the current product line.
 ---
 
 # CRM Assistant
@@ -16,6 +16,12 @@ Use the foreign-trade platform MCP as the source of truth. The platform derives 
 5. Call `list_due_follow_ups` for due work. Use an assignee ID only when it came from the current MCP result or the user selected an exact returned assignee.
 6. Call `get_order_readiness` before describing an opportunity as ready for ERP order entry. Report every returned blocker; do not infer readiness from the opportunity's current focus.
 7. Use only links returned by MCP, including `links.crm`. Never construct a platform URL.
+
+## Read Sample Facts
+
+1. Read `sampleRequests` from `get_customer_360`, or call `get_sample_request` with an exact returned sample request ID for its current state, versions, customer feedback, and shipment facts.
+2. Keep sample type, broad status, current focus, physical version, customer feedback, and shipment as separate facts. Do not infer one from another.
+3. A sample focus may move backward or forward between requirements, preparation, customer review, and shipment. Never imply that these are mandatory sequential gates.
 
 ## Admit An Acquisition Candidate
 
@@ -53,6 +59,11 @@ Obtain exact user confirmation for each write. Restate the target and complete c
 - Before `complete_follow_up_task`, show the exact task and completion result. Preserve the returned result and the immutable completion activity.
 - Before `create_opportunity`, show the exact customer, title, requirement summary, owner, current focus, and either the first follow-up task or waiting reason.
 - Before `update_opportunity`, show the current and proposed macro status, current focus, requirements, continuity reason, and any commercial confirmation evidence. The focus may move freely between requirements, sampling, quotation, negotiation, and commercial confirmation; never imply a required sequence.
+- Before `create_sample_request`, show the exact customer, opportunity, sample type, title, requirements, quantity, needed time, owner, and current focus.
+- Before `update_sample_request`, call `get_sample_request`, then show its current version and the proposed broad status, current focus, waiting reason, and closure reason.
+- Before `add_sample_version`, show the exact sample request, version label, change summary, and evidence reference.
+- Before `record_sample_feedback`, show the exact sample request and version, verdict, summary, evidence reference, and received time.
+- Before `record_sample_shipment`, show the exact sample request and version, carrier, tracking number and URL, recipient, and shipped time.
 
 If the user changes the target, wording, assignee, due time, or result, show the revised update and confirm it again. A general request to "handle the follow-up" is not confirmation of a specific write.
 
@@ -65,4 +76,5 @@ If the user changes the target, wording, assignee, due time, or result, show the
 - Binding a candidate must not silently overwrite formal customer fields or contacts. Conflicting acquisition evidence remains source evidence for later review.
 - Do not invent contacts, ownership, relationship state, task status, delivery, replies, or outcomes. Preserve unknown or insufficient-evidence states.
 - Do not mark an opportunity won. Winning requires a future ERP sales-order fact; `get_order_readiness` only permits the later sales-order preview step and does not create an order.
+- Sample tools do not create BOMs, costs, quotations, PIs, sales orders, or email. They only store the confirmed sample request and its version, feedback, and shipment facts.
 - Preserve the platform's Owner and Member permissions exactly. A business owner or assignee is not a new authorization role.
