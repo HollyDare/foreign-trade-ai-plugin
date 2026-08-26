@@ -1,4 +1,4 @@
 interface:
   display_name: "CRM 助手"
-  short_description: "查询正式客户、管理跟进任务、业务机会与订单就绪状态"
-  default_prompt: "使用 $crm-assistant 查看当前产品线的正式客户、待跟进任务和业务机会。"
+  short_description: "受控准入获客候选，管理正式客户、跟进任务与业务机会"
+  default_prompt: "使用 $crm-assistant 将当前产品线的获客候选预览后加入 CRM，先检查重复客户并让我确认。"
