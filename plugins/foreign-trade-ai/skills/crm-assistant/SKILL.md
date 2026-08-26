@@ -1,6 +1,6 @@
 ---
 name: crm-assistant
-description: Guide authenticated business users through controlled acquisition-candidate admission, formal CRM customers, Gmail or Outlook message archival, follow-up tasks, flexible business opportunities, sample versions, feedback and shipments, and evidence-based ERP order-entry readiness in the current product line.
+description: Guide authenticated business users through controlled acquisition-candidate admission, formal CRM customers, Gmail or Outlook message archival, follow-up tasks, flexible opportunities, sample facts, costing sheets, versioned quotations, customer acceptance evidence, and ERP order-entry readiness in the current product line.
 ---
 
 # CRM Assistant
@@ -10,7 +10,7 @@ Use the foreign-trade platform MCP as the source of truth. The platform derives 
 ## Read CRM Facts
 
 1. Call `search_customers` before `get_customer_360`. Use the exact customer ID returned by the search result.
-2. Call `get_customer_360` for contacts, sources, activities, archived conversations, open tasks, ownership, and relationship status. Keep returned facts distinct from the user's description and from AI suggestions.
+2. Call `get_customer_360` for contacts, sources, activities, archived conversations, open tasks, ownership, relationship status, and the `sales.costingSheets` and `sales.quotations` summaries. Keep returned facts distinct from the user's description and from AI suggestions.
 3. Call `get_customer_communication_context` before drafting or replying so the user can review the exact contact, recent archived messages, open follow-ups, and do-not-contact state.
 4. Call `list_customer_conversations` when the user wants the archived Gmail or Outlook thread evidence. This reads company CRM snapshots, not the live mailbox.
 5. Call `list_due_follow_ups` for due work. Use an assignee ID only when it came from the current MCP result or the user selected an exact returned assignee.
@@ -31,6 +31,12 @@ Use the foreign-trade platform MCP as the source of truth. The platform derives 
 4. Show the complete signed preview: source candidate, formal fields, selected contact, owner, create-or-bind decision, conflicts, and effect. The preview does not write CRM data.
 5. Only after exact user confirmation, pass the returned preview token unchanged to `admit_customer_to_crm` with `confirmed: true`. Never reconstruct or edit fields outside the preview token.
 6. Use the returned customer ID with `get_customer_360`. Report whether a customer was created or an existing customer was bound, separately from any later activity, task, opportunity, or email action.
+
+## Read Costing And Quotation Facts
+
+1. Read the current customer's costing and quotation summaries from `get_customer_360`. Use only exact costing, quotation, opportunity, sample, and version IDs returned in the authenticated scope.
+2. Call `get_quotation` before revising, sending, accepting, or explaining a quotation. Treat its saved cost snapshot, price tiers, margin calculations, commercial terms, sent state, and acceptance evidence as platform facts.
+3. Call `compare_quotation_versions` when the user asks what changed. Report saved differences without presenting an AI explanation as an approved price decision.
 
 ## Gmail or Outlook Loop
 
@@ -64,6 +70,13 @@ Obtain exact user confirmation for each write. Restate the target and complete c
 - Before `add_sample_version`, show the exact sample request, version label, change summary, and evidence reference.
 - Before `record_sample_feedback`, show the exact sample request and version, verdict, summary, evidence reference, and received time.
 - Before `record_sample_shipment`, show the exact sample request and version, carrier, tracking number and URL, recipient, and shipped time.
+- Before `create_costing_sheet`, show the exact customer, opportunity, optional sample, title, product reference, currency, every cost component, evidence reference, and notes.
+- Before `update_costing_sheet`, re-read the current costing version, then show the current and proposed currency, every component, evidence reference, notes, and expected version.
+- Before `create_quotation`, show the exact customer, opportunity, costing-sheet version, title, cost snapshot, currency and exchange rate, Incoterm, MOQ, lead time, payment terms, validity, every price tier and projected margin, notes, and evidence reference.
+- Before `add_quotation_version`, call `get_quotation`, then show the exact quotation, latest saved version, new costing snapshot, complete proposed terms, price tiers, evidence, and change summary. This appends a draft and never replaces history.
+- Before `update_quotation_version`, call `get_quotation`, verify that the target version is still a draft, then show its current revision and every proposed field.
+- Before `mark_quotation_version_sent`, call `get_quotation`, show the exact draft version and send time, and explain that this only records a confirmed external send. It does not send email.
+- Before `record_quotation_acceptance`, call `get_quotation`, show the exact sent version, acceptance time, summary, and evidence reference. An accepted fact must reference a sent quotation version.
 
 If the user changes the target, wording, assignee, due time, or result, show the revised update and confirm it again. A general request to "handle the follow-up" is not confirmation of a specific write.
 
@@ -77,4 +90,7 @@ If the user changes the target, wording, assignee, due time, or result, show the
 - Do not invent contacts, ownership, relationship state, task status, delivery, replies, or outcomes. Preserve unknown or insufficient-evidence states.
 - Do not mark an opportunity won. Winning requires a future ERP sales-order fact; `get_order_readiness` only permits the later sales-order preview step and does not create an order.
 - Sample tools do not create BOMs, costs, quotations, PIs, sales orders, or email. They only store the confirmed sample request and its version, feedback, and shipment facts.
+- Costing and quotation tools do not create BOMs, PIs, sales orders, approval decisions, or email. AI may organize evidence and draft terms, but it must not decide the minimum selling price or bypass company approval.
+- A sent quotation version is immutable. Use `add_quotation_version` for any later commercial revision; never rewrite the sent snapshot.
+- `mark_quotation_version_sent` records an externally confirmed event and does not send email. `record_quotation_acceptance` only records an accepted fact against an exact sent quotation version.
 - Preserve the platform's Owner and Member permissions exactly. A business owner or assignee is not a new authorization role.
