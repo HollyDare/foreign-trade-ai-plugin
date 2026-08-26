@@ -1,6 +1,6 @@
 {
   "name": "foreign-trade-ai",
-  "version": "0.5.0+codex.20260826034809",
+  "version": "0.5.0+codex.20260826065149",
   "description": "Connect Codex to the unified foreign-trade platform for guided operations and business feedback.",
   "author": {
     "name": "HollyDare"
@@ -23,5 +23,6 @@
       "\u67e5\u770b\u5f53\u524d\u4ea7\u54c1\u7ebf\u7684\u83b7\u5ba2\u8fdb\u5ea6\u3002"
     ]
   },
+  "apps": "./.app.json",
   "mcpServers": "./.mcp.json"
 }

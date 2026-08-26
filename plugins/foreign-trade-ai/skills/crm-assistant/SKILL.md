@@ -36,6 +36,13 @@ Use the foreign-trade platform MCP as the source of truth. The platform derives 
 6. Report sending and CRM archival as separate results. If sending succeeded but archival failed, retry CRM archival with the same external message identity and never send again.
 7. Create the next action through `create_follow_up_task` only after separate confirmation. A successful archive remains valid if task creation fails.
 
+### Mailbox Acceptance
+
+- A technical acceptance test must use sender and recipient mailboxes controlled by the tester. Never use an acquisition candidate, formal customer, or other external recipient as a test target.
+- Do not admit a real acquisition candidate or create production CRM activity only to test the mailbox connector. Use a dedicated non-production test customer when CRM archival also needs acceptance coverage.
+- Treat a provider-created draft, self-delivery, and a provider-confirmed external send as different capabilities. Report exactly which capability the available Gmail or Outlook tool returned.
+- If the mailbox tool does not expose an external send action, leave the reviewed message as a draft and require the user to send it in Gmail or Outlook. Never claim the connector can send merely because it can create drafts or deliver to the user's own mailbox.
+
 ## Make Confirmed Updates
 
 Obtain exact user confirmation for each write. Restate the target and complete content before passing `confirmed: true`.
