@@ -32,9 +32,10 @@ Use the foreign-trade platform MCP as the source of truth. Never infer the compa
 ## Deep Dive And Progress
 
 1. Use `list_acquisition_customers` to resolve current customer IDs and processing state.
-2. Before `start_priority_acquisition_deep_dive`, state the exact limit and that only eligible priority customers with remaining gaps are queued. Obtain explicit confirmation.
-3. Use `get_acquisition_source_batch` with an ID returned by the platform to inspect intake and candidate progress.
-4. Preserve uncertain, failed, or human-review states. Do not manufacture a successful result.
+2. For an exact customer rerun, state the customer name and returned account ID, pass that `accountId` with `limit: 1`, and obtain explicit confirmation. Do not claim that a limit-only run targets a named customer.
+3. For an automatic priority run, state the exact limit and that only eligible priority customers with unresolved workflow gaps are queued. Obtain explicit confirmation.
+4. Use `get_acquisition_source_batch` with an ID returned by the platform to inspect intake and candidate progress.
+5. Preserve uncertain, failed, or human-review states. Do not manufacture a successful result.
 
 ## Hand Off A Candidate To CRM
 

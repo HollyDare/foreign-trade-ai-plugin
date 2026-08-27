@@ -1,6 +1,6 @@
 ---
 name: crm-assistant
-description: Guide authenticated business users through controlled acquisition-candidate admission, formal CRM customers, Gmail or Outlook message archival, follow-up tasks, flexible opportunities, sample facts, costing sheets, versioned quotations, customer acceptance evidence, and ERP order-entry readiness in the current product line.
+description: Guide authenticated business users through controlled acquisition-candidate admission, formal CRM customers, Gmail or Outlook message archival, follow-up tasks, flexible opportunities, samples, costing, quotations, optional PI, and confirmed sales-order entry in the current product line.
 ---
 
 # CRM Assistant
@@ -10,7 +10,7 @@ Use the foreign-trade platform MCP as the source of truth. The platform derives 
 ## Read CRM Facts
 
 1. Call `search_customers` before `get_customer_360`. Use the exact customer ID returned by the search result.
-2. Call `get_customer_360` for contacts, sources, activities, archived conversations, open tasks, ownership, relationship status, and the `sales.costingSheets` and `sales.quotations` summaries. Keep returned facts distinct from the user's description and from AI suggestions.
+2. Call `get_customer_360` for contacts, sources, activities, archived conversations, open tasks, ownership, relationship status, and the `sales.costingSheets`, `sales.quotations`, `sales.proformaInvoices`, and `sales.salesOrders` summaries. Keep returned facts distinct from the user's description and from AI suggestions.
 3. Call `get_customer_communication_context` before drafting or replying so the user can review the exact contact, recent archived messages, open follow-ups, and do-not-contact state.
 4. Call `list_customer_conversations` when the user wants the archived Gmail or Outlook thread evidence. This reads company CRM snapshots, not the live mailbox.
 5. Call `list_due_follow_ups` for due work. Use an assignee ID only when it came from the current MCP result or the user selected an exact returned assignee.
@@ -38,6 +38,14 @@ Use the foreign-trade platform MCP as the source of truth. The platform derives 
 2. Call `get_quotation` before revising, sending, accepting, or explaining a quotation. Treat its saved cost snapshot, price tiers, margin calculations, commercial terms, sent state, and acceptance evidence as platform facts.
 3. Call `compare_quotation_versions` when the user asks what changed. Report saved differences without presenting an AI explanation as an approved price decision.
 
+## Read PI And Sales Order Facts
+
+1. PI is optional. Use `get_proforma_invoice` only when the buyer or company process needs a PI; an accepted quotation or evidenced customer PO may proceed to order preview without one.
+2. Call `get_sales_order` before explaining a confirmed order or recording a later change. Treat its source, frozen commercial terms, color-size quantities, confirmation, and appended changes as platform facts.
+3. Call `preview_sales_order` first for every order path. Show the complete source, customer, opportunity, order number, terms, lines, totals, evidence, and preview expiry. The preview does not create an order.
+4. Only after exact user confirmation, pass the returned preview token unchanged to `create_sales_order` with `confirmed: true`. Never reconstruct or edit a signed preview token.
+5. A successful sales order is the only fact in this workflow that marks its opportunity won. Report the order creation and resulting opportunity status together.
+
 ## Gmail or Outlook Loop
 
 1. Detect whether a separately authorized Gmail or Outlook tool is available. If neither is available, prepare a reviewable draft only and do not claim it was sent.
@@ -47,13 +55,6 @@ Use the foreign-trade platform MCP as the source of truth. The platform derives 
 5. For an incoming reply, require the user to select or confirm the exact Gmail or Outlook message and customer before `archive_customer_message`. Use `reply_observed` only for an inbound reply and `provider_confirmed_sent` only for an outbound provider result.
 6. Report sending and CRM archival as separate results. If sending succeeded but archival failed, retry CRM archival with the same external message identity and never send again.
 7. Create the next action through `create_follow_up_task` only after separate confirmation. A successful archive remains valid if task creation fails.
-
-### Mailbox Acceptance
-
-- A technical acceptance test must use sender and recipient mailboxes controlled by the tester. Never use an acquisition candidate, formal customer, or other external recipient as a test target.
-- Do not admit a real acquisition candidate or create production CRM activity only to test the mailbox connector. Use a dedicated non-production test customer when CRM archival also needs acceptance coverage.
-- Treat a provider-created draft, self-delivery, and a provider-confirmed external send as different capabilities. Report exactly which capability the available Gmail or Outlook tool returned.
-- If the mailbox tool does not expose an external send action, leave the reviewed message as a draft and require the user to send it in Gmail or Outlook. Never claim the connector can send merely because it can create drafts or deliver to the user's own mailbox.
 
 ## Make Confirmed Updates
 
@@ -77,6 +78,11 @@ Obtain exact user confirmation for each write. Restate the target and complete c
 - Before `update_quotation_version`, call `get_quotation`, verify that the target version is still a draft, then show its current revision and every proposed field.
 - Before `mark_quotation_version_sent`, call `get_quotation`, show the exact draft version and send time, and explain that this only records a confirmed external send. It does not send email.
 - Before `record_quotation_acceptance`, call `get_quotation`, show the exact sent version, acceptance time, summary, and evidence reference. An accepted fact must reference a sent quotation version.
+- Before `create_proforma_invoice`, call `get_quotation`, verify the exact version was accepted, then show the PI number, buyer reference, delivery date, address, every line and color-size quantity, total, notes, and evidence. This creates a draft only.
+- Before `update_proforma_invoice`, call `get_proforma_invoice`, verify it is still a draft, then show its current revision and every proposed field.
+- Before `confirm_proforma_invoice`, call `get_proforma_invoice`, show the exact PI snapshot, customer confirmation time, and evidence. Confirmation locks the PI.
+- Before `create_sales_order`, use `preview_sales_order` and show the complete returned order preview and expiry. Confirm the unchanged token separately; do not treat the earlier quotation, PI, or PO confirmation as order confirmation.
+- Before `record_sales_order_change`, call `get_sales_order`, then show the exact order, change time, summary, evidence, and every before/after value. This appends history and does not rewrite the confirmed order.
 
 If the user changes the target, wording, assignee, due time, or result, show the revised update and confirm it again. A general request to "handle the follow-up" is not confirmation of a specific write.
 
@@ -88,9 +94,11 @@ If the user changes the target, wording, assignee, due time, or result, show the
 - Never write the platform database directly or call internal APIs. Do not use generic CRUD, SQL, arbitrary HTTP, or page-click simulation as a substitute for a missing tool.
 - Binding a candidate must not silently overwrite formal customer fields or contacts. Conflicting acquisition evidence remains source evidence for later review.
 - Do not invent contacts, ownership, relationship state, task status, delivery, replies, or outcomes. Preserve unknown or insufficient-evidence states.
-- Do not mark an opportunity won. Winning requires a future ERP sales-order fact; `get_order_readiness` only permits the later sales-order preview step and does not create an order.
+- Do not call `update_opportunity` to mark an opportunity won. A confirmed sales order created by `create_sales_order` owns that transition; `get_order_readiness` and `preview_sales_order` do not create an order.
 - Sample tools do not create BOMs, costs, quotations, PIs, sales orders, or email. They only store the confirmed sample request and its version, feedback, and shipment facts.
 - Costing and quotation tools do not create BOMs, PIs, sales orders, approval decisions, or email. AI may organize evidence and draft terms, but it must not decide the minimum selling price or bypass company approval.
 - A sent quotation version is immutable. Use `add_quotation_version` for any later commercial revision; never rewrite the sent snapshot.
 - `mark_quotation_version_sent` records an externally confirmed event and does not send email. `record_quotation_acceptance` only records an accepted fact against an exact sent quotation version.
+- A confirmed PI and a sales order are immutable snapshots. Use `record_sales_order_change` for later order differences; never overwrite the original order.
+- `preview_sales_order` is read-only and short-lived. `create_sales_order` is idempotent for the same signed preview and requires a separate exact confirmation.
 - Preserve the platform's Owner and Member permissions exactly. A business owner or assignee is not a new authorization role.
