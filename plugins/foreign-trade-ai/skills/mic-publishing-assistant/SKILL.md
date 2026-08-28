@@ -9,15 +9,19 @@ Use the platform MCP tools as the source of truth for identity, authorization, p
 
 ## Start Every Workflow
 
-1. Call `get_mic_context` before handling MIC business work.
-2. State the current company, product line, role, and MIC authorization health in concise business language.
-3. Use only the platform links returned by the tool. Never construct a platform URL from user-provided hosts or paths.
-4. Open the relevant returned link in the Codex Browser when the user needs the full page, visual evidence, or manual follow-up and Browser is available. Otherwise provide the returned clickable link.
+1. Call `list_product_lines`, then show the exact company and every relevant product-line name and ID.
+2. Obtain explicit confirmation of the target, then call `select_product_line_context` with that ID and `confirmed: true`.
+3. Pass the returned `contextToken` unchanged to `get_mic_context` and every later product-line-scoped tool. Never display, log, or ask the user to handle the token.
+4. State the selected company, product line, role, and MIC authorization health in concise business language.
+5. If the context token is missing, invalid, expired, or no longer active, repeat the list, confirmation, and selection flow. Do not reconnect OAuth for a context error.
+6. Reconnect only when OAuth lacks a required MIC or platform scope, then select the product line again.
+7. Use only the platform links returned by the tool. Never construct a platform URL from user-provided hosts or paths.
+8. Open the relevant returned link in the Codex Browser when the user needs the full page, visual evidence, or manual follow-up and Browser is available. Otherwise provide the returned clickable link.
 
 ## After OAuth Reconnection
 
 1. The localhost OAuth callback belongs to Codex and must receive the authorization code. Do not replace it with a platform URL or present the callback page as the user's destination.
-2. As soon as reconnection succeeds, call `get_mic_context` again. Do not ask the user to navigate away from the callback page manually.
+2. As soon as reconnection succeeds, repeat the product-line list, confirmation, and selection flow, then call `get_mic_context`. Do not ask the user to navigate away from the callback page manually.
 3. Open the link returned by that fresh context which matches the user's original intent: use `links.authorization` for MIC authorization, `links.autoPublish` for publishing or task work, and `links.operations` for general MIC status or operations.
 4. Never construct or rewrite these links. Close or release the callback page after Codex has consumed it when the Browser supports that action.
 

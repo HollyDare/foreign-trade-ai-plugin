@@ -9,10 +9,13 @@ Use the foreign-trade platform MCP as the source of truth. Never infer the compa
 
 ## Start
 
-1. Call `get_acquisition_context` before other acquisition work.
-2. State the current company and product line and whether the workspace is initialized.
-3. Use only links returned by MCP tools. Never construct platform or runtime URLs.
-4. If OAuth lacks an acquisition scope, reconnect and call `get_acquisition_context` again.
+1. Call `list_product_lines`, then show the exact company and every relevant product-line name and ID.
+2. Obtain explicit confirmation of the target, then call `select_product_line_context` with that ID and `confirmed: true`.
+3. Pass the returned `contextToken` unchanged to `get_acquisition_context` and every later product-line-scoped tool. Never display, log, or ask the user to handle the token.
+4. State the selected company and product line and whether the workspace is initialized.
+5. If the context token is missing, invalid, expired, or no longer active, repeat the list, confirmation, and selection flow. Do not reconnect OAuth for a context error.
+6. Reconnect only when OAuth lacks a required acquisition or platform scope, then select the product line again.
+7. Use only links returned by MCP tools. Never construct platform or runtime URLs.
 
 ## Initialize The Workspace
 
@@ -39,7 +42,7 @@ Use the foreign-trade platform MCP as the source of truth. Never infer the compa
 
 ## Hand Off A Candidate To CRM
 
-1. Use `list_acquisition_customers` to resolve the exact acquisition account ID in the current OAuth product line. An acquisition result is not yet a formal CRM customer.
+1. Use `list_acquisition_customers` to resolve the exact acquisition account ID in the selected product-line context. An acquisition result is not yet a formal CRM customer.
 2. Call `preview_customer_admission` with that exact ID and a returned CRM owner ID. If possible matches exist, show their match reasons and conflicts and ask whether to create a new customer or bind an exact returned customer.
 3. Show the complete preview and obtain exact user confirmation before calling `admit_customer_to_crm` with the preview token unchanged and `confirmed: true`.
 4. Do not construct a manual customer payload, infer IDs, admit a MIC record, or claim success before the CRM tool returns a formal customer ID.

@@ -5,7 +5,15 @@ description: Guide authenticated business users through controlled acquisition-c
 
 # CRM Assistant
 
-Use the foreign-trade platform MCP as the source of truth. The platform derives identity, company, permissions, and current product line from OAuth. Never infer the company, account, product line, customer, task, or assignee ID from conversation text, names, URLs, or prior tool calls outside the current authenticated scope.
+Use the foreign-trade platform MCP as the source of truth. OAuth supplies identity, company, and permissions; an explicit short-lived context supplies the product line. Never infer the company, account, product line, customer, task, or assignee ID from conversation text, names, URLs, or prior tool calls outside the current authenticated scope.
+
+## Select A Product-Line Context
+
+1. Call `list_product_lines`, then show the exact company and every relevant product-line name and ID.
+2. Obtain explicit confirmation of the target, then call `select_product_line_context` with that ID and `confirmed: true`.
+3. Pass the returned `contextToken` unchanged to every CRM, acquisition, and sales tool. Never display, log, or ask the user to handle the token.
+4. If the context token is missing, invalid, expired, or the product line is no longer active, repeat the list, confirmation, and selection flow. Do not reconnect OAuth for a context error.
+5. Reconnect only when OAuth lacks a required acquisition or platform scope, then select the product line again.
 
 ## Read CRM Facts
 
@@ -14,7 +22,7 @@ Use the foreign-trade platform MCP as the source of truth. The platform derives 
 3. Call `get_customer_communication_context` before drafting or replying so the user can review the exact contact, recent archived messages, open follow-ups, and do-not-contact state.
 4. Call `list_customer_conversations` when the user wants the archived Gmail or Outlook thread evidence. This reads company CRM snapshots, not the live mailbox.
 5. Call `list_due_follow_ups` for due work. Use an assignee ID only when it came from the current MCP result or the user selected an exact returned assignee.
-6. Call `get_order_readiness` before describing an opportunity as ready for ERP order entry. Report every returned blocker; do not infer readiness from the opportunity's current focus.
+6. Call `get_order_readiness` before describing an opportunity as ready for ERP order entry. Report every returned blocker; an absent active contact is an information fact, while the saved commercial evidence or buyer reference provides the auditable transaction channel.
 7. Use only links returned by MCP, including `links.crm`. Never construct a platform URL.
 
 ## Read Sample Facts
@@ -25,7 +33,7 @@ Use the foreign-trade platform MCP as the source of truth. The platform derives 
 
 ## Admit An Acquisition Candidate
 
-1. Use `list_acquisition_customers` to resolve the exact acquisition account ID in the current OAuth product line. Never substitute a company name, guessed ID, MIC record, or manually supplied customer payload.
+1. Use `list_acquisition_customers` to resolve the exact acquisition account ID in the selected product-line context. Never substitute a company name, guessed ID, MIC record, or manually supplied customer payload.
 2. Call `preview_customer_admission` with that ID and the exact CRM owner. Select a contact and email only by IDs returned for the same candidate; leaving them unselected means they will not enter formal CRM data.
 3. If the preview reports possible matches, show every match reason and field conflict. Ask the user whether to create a new customer or bind an existing customer, then call `preview_customer_admission` again with that exact decision. Never choose a duplicate target silently.
 4. Show the complete signed preview: source candidate, formal fields, selected contact, owner, create-or-bind decision, conflicts, and effect. The preview does not write CRM data.
@@ -53,15 +61,19 @@ Use the foreign-trade platform MCP as the source of truth. The platform derives 
 3. For sending, show the exact mailbox, recipients, subject, body, and attachments before using the mailbox tool. The mailbox tool owns sending; the CRM MCP does not.
 4. After the mailbox tool returns the provider mailbox, thread, and message identity, show the exact message snapshot and customer association. Obtain a separate confirmation before calling `archive_customer_message` with `confirmed: true`.
 5. For an incoming reply, require the user to select or confirm the exact Gmail or Outlook message and customer before `archive_customer_message`. Use `reply_observed` only for an inbound reply and `provider_confirmed_sent` only for an outbound provider result.
-6. Report sending and CRM archival as separate results. If sending succeeded but archival failed, retry CRM archival with the same external message identity and never send again.
-7. Create the next action through `create_follow_up_task` only after separate confirmation. A successful archive remains valid if task creation fails.
+6. When the mailbox tool returns a delivery, hard-bounce, soft-bounce, complaint, or unsubscribe event, bind it to the exact previously archived outbound message and recipient. Show the complete event and obtain separate confirmation before `record_customer_email_delivery_event`.
+7. Use `get_email_outreach_performance` to report product-line outreach performance. Treat its rates as CRM-observed facts only; do not supplement them with send success, missing bounces, open pixels, or model estimates.
+7. Report sending and CRM archival as separate results, and report email-feedback synchronization separately as well. If sending succeeded but archival failed, retry CRM archival with the same external message identity and never send again.
+8. Create the next action through `create_follow_up_task` only after separate confirmation. A successful archive remains valid if task creation fails.
 
 ## Make Confirmed Updates
 
 Obtain exact user confirmation for each write. Restate the target and complete content before passing `confirmed: true`.
 
 - Before `record_activity`, show the exact customer, activity type, factual summary, and occurrence context. Do not record a draft, planned contact, or AI inference as an activity that already happened.
+- Before `create_customer_contact`, show the exact customer, name, title, and email. Before `update_customer_contact`, show the exact contact and all proposed fields, including whether it will be active or inactive. Both operations append an immutable `contact_changed` audit activity; an email change resets verification to unverified.
 - Before `archive_customer_message`, show the exact customer, provider mailbox, thread and message identity, direction, evidence level, sender, recipients, subject, body, attachments, external link, and occurrence time.
+- Before `record_customer_email_delivery_event`, show the exact customer, provider mailbox, archived outbound message identity, provider event identity, event type, recipient, provider code, external link, and occurrence time.
 - Before `create_follow_up_task`, show the exact customer, assignee, due time with timezone, and expected action.
 - Before `complete_follow_up_task`, show the exact task and completion result. Preserve the returned result and the immutable completion activity.
 - Before `create_opportunity`, show the exact customer, title, requirement summary, owner, current focus, and either the first follow-up task or waiting reason.
@@ -69,8 +81,8 @@ Obtain exact user confirmation for each write. Restate the target and complete c
 - Before `create_sample_request`, show the exact customer, opportunity, sample type, title, requirements, quantity, needed time, owner, and current focus.
 - Before `update_sample_request`, call `get_sample_request`, then show its current version and the proposed broad status, current focus, waiting reason, and closure reason.
 - Before `add_sample_version`, show the exact sample request, version label, change summary, and evidence reference.
-- Before `record_sample_feedback`, show the exact sample request and version, verdict, summary, evidence reference, and received time.
-- Before `record_sample_shipment`, show the exact sample request and version, carrier, tracking number and URL, recipient, and shipped time.
+- Before `record_sample_feedback`, show the exact sample request and version, verdict, summary, evidence reference, and received time. Supply a stable `idempotencyKey`; reuse the same key after an uncertain or failed response, and use a new key only for a new feedback fact.
+- Before `record_sample_shipment`, show the exact sample request and version, carrier, tracking number and URL, recipient, and shipped time. Supply a stable `idempotencyKey`; reuse the same key after an uncertain or failed response, and use a new key only for a new shipment fact.
 - Before `create_costing_sheet`, show the exact customer, opportunity, optional sample, title, product reference, currency, every cost component, evidence reference, and notes.
 - Before `update_costing_sheet`, re-read the current costing version, then show the current and proposed currency, every component, evidence reference, notes, and expected version.
 - Before `create_quotation`, show the exact customer, opportunity, costing-sheet version, title, cost snapshot, currency and exchange rate, Incoterm, MOQ, lead time, payment terms, validity, every price tier and projected margin, notes, and evidence reference.
@@ -88,14 +100,15 @@ If the user changes the target, wording, assignee, due time, or result, show the
 
 ## Capability Boundaries
 
-- Customer admission is limited to the two-step `preview_customer_admission` and `admit_customer_to_crm` flow for a real candidate in the current OAuth product line. It does not support manual arbitrary customer creation, MIC admission, generic CRUD, SQL, arbitrary HTTP, or direct database access.
+- Customer admission is limited to the two-step `preview_customer_admission` and `admit_customer_to_crm` flow for a real candidate in the selected product-line context. It does not support manual arbitrary customer creation, MIC admission, generic CRUD, SQL, arbitrary HTTP, or direct database access.
 - The CRM MCP never sends email and never stores Gmail or Outlook OAuth credentials. Use only a separately authorized mailbox tool, and never claim a draft or an unconfirmed provider result is a CRM activity.
 - Do not expose or reconstruct a generic `send_email` operation through CRM tools. `archive_customer_message` stores confirmed evidence only.
+- `record_customer_email_delivery_event` only accepts a provider event bound to an already archived outbound message and matching recipient. Never infer delivery from a successful send, missing bounce, open pixel, or model judgment.
 - Never write the platform database directly or call internal APIs. Do not use generic CRUD, SQL, arbitrary HTTP, or page-click simulation as a substitute for a missing tool.
 - Binding a candidate must not silently overwrite formal customer fields or contacts. Conflicting acquisition evidence remains source evidence for later review.
 - Do not invent contacts, ownership, relationship state, task status, delivery, replies, or outcomes. Preserve unknown or insufficient-evidence states.
 - Do not call `update_opportunity` to mark an opportunity won. A confirmed sales order created by `create_sales_order` owns that transition; `get_order_readiness` and `preview_sales_order` do not create an order.
-- Sample tools do not create BOMs, costs, quotations, PIs, sales orders, or email. They only store the confirmed sample request and its version, feedback, and shipment facts.
+- Sample tools do not create BOMs, costs, quotations, PIs, sales orders, or email. They only store the confirmed sample request and its version, feedback, and shipment facts. Never retry feedback or shipment with a different idempotency key after an uncertain result.
 - Costing and quotation tools do not create BOMs, PIs, sales orders, approval decisions, or email. AI may organize evidence and draft terms, but it must not decide the minimum selling price or bypass company approval.
 - A sent quotation version is immutable. Use `add_quotation_version` for any later commercial revision; never rewrite the sent snapshot.
 - `mark_quotation_version_sent` records an externally confirmed event and does not send email. `record_quotation_acceptance` only records an accepted fact against an exact sent quotation version.
