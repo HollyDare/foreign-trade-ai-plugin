@@ -7,27 +7,32 @@ HollyDare 官方全系统 Codex 插件。插件通过统一远程 MCP 连接外�
 把下面这段话完整复制到 Codex：
 
 ```text
-请帮我安装 HollyDare 外贸 AI 助手。
+请帮我安装或修复 HollyDare 外贸 AI 助手。
 
 官方插件地址：
 https://github.com/HollyDare/foreign-trade-ai-plugin
 
 请完成以下操作：
-1. 添加这个 Codex 插件 marketplace。
-2. 安装 foreign-trade-ai@hollydare。
-3. 确认安装版本和远程 MCP 地址。
-4. 安装完成后告诉我需要新建一个 Codex 任务。
-5. 不要向我索取平台密码、MIC 密码、API Key 或 Cookie。
+1. 必须在运行 Codex Desktop 的这台电脑本地执行；如果当前 shell 在远程、SSH 或云端环境，停止安装并明确说明，不能宣称成功。
+2. 使用当前 Codex Desktop 实际使用的 codex CLI，确认命令写入的是该 Desktop 正在读取的 Codex 配置目录。
+3. 添加这个 Codex 插件 marketplace；如果 hollydare 已存在，运行 codex plugin marketplace upgrade hollydare --json 更新 Git 快照。
+4. 如果插件已安装，移除旧的 foreign-trade-ai@hollydare 后重新安装 foreign-trade-ai@hollydare。
+5. 确认安装版本和远程 MCP 地址。运行 codex plugin list --json，只有 foreign-trade-ai@hollydare 显示 installed=true、enabled=true、版本不低于 0.6.1+codex.20260901162924、authPolicy=ON_USE，且 .mcp.json 仍指向 https://hollydare.cloud/api/mcp，才算安装完成。
+6. 安装完成后告诉我需要完全退出并重新打开 Codex 桌面应用，再新建一个 Codex 任务；首次使用时完成平台 OAuth 登录。
+7. 不要向我索取平台密码、MIC 密码、API Key 或 Cookie，也不要索取 OAuth token。
 ```
 
 ## 命令行安装
 
 ```bash
 codex plugin marketplace add HollyDare/foreign-trade-ai-plugin
+codex plugin marketplace upgrade hollydare --json
 codex plugin add foreign-trade-ai@hollydare
 ```
 
-安装完成后新建一个 Codex 任务，使插件和 MCP 配置生效。
+修复旧安装时，在更新 marketplace 后先执行 `codex plugin remove foreign-trade-ai@hollydare --json`，再重新安装。`codex plugin list --json` 必须显示插件已安装、已启用、版本不低于 `0.6.1+codex.20260901162924`，并且 `authPolicy` 为 `ON_USE`。
+
+安装完成后完全退出并重新打开 Codex，再新建一个任务，使插件和 MCP 配置生效。首次使用平台能力时完成 OAuth 登录。
 
 ## 登录与邮箱协作
 
