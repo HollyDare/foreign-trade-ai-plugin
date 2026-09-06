@@ -15,7 +15,7 @@ test("remote MCP authentication is deferred until first use", () => {
 });
 
 test("repair instructions require the current release and policy", () => {
-  assert.equal(plugin.version, "0.6.1+codex.20260901162924");
+  assert.equal(plugin.version, "0.6.2+codex.20260906185425");
   assert.match(readme, /codex plugin marketplace upgrade hollydare/);
   assert.match(readme, /codex plugin remove foreign-trade-ai@hollydare/);
   assert.match(readme, /authPolicy.*ON_USE/);

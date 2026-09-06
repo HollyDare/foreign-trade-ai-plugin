@@ -1,0 +1,4 @@
+interface:
+  display_name: "产品开发助手"
+  short_description: "核对款式物料、颜色尺码用料范围和版本，确认后保存与计算物料需求"
+  default_prompt: "使用 $product-development-assistant 核对当前产品线的款式和 BOM，列出颜色尺码适用范围与缺失资料，在我确认后再提交。"

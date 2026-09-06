@@ -46,6 +46,10 @@ Use the foreign-trade platform MCP as the source of truth. OAuth supplies identi
 2. Call `get_quotation` before revising, sending, accepting, or explaining a quotation. Treat its saved cost snapshot, price tiers, margin calculations, commercial terms, sent state, and acceptance evidence as platform facts.
 3. Call `compare_quotation_versions` when the user asks what changed. Report saved differences without presenting an AI explanation as an approved price decision.
 
+For formal style pricing, discover the actual published style and variants through `search_styles` and `get_style_specification` in the selected product line. Before `create_costing_sheet`, confirm `productStyleId`, `productStyleVersion`, and a nonempty explicit `applicableStyleVariantIds` list. Never guess IDs or assume all colors and sizes share a cost or price. Keep single-variant costing through `styleVariantId` separate from this style-scoped mode; do not submit both modes together.
+
+A quotation freezes its costing's applicable variants and style version. Quantity tiers apply to the combined quantity of that explicit scope in the same unit. A different scope requires a new costing and a revised quotation; compare `productScope` as well as prices and terms. Legacy records remain legacy, not silently converted to formal style identities.
+
 ## Read PI And Sales Order Facts
 
 1. PI is optional. Use `get_proforma_invoice` only when the buyer or company process needs a PI; an accepted quotation or evidenced customer PO may proceed to order preview without one.
@@ -53,6 +57,8 @@ Use the foreign-trade platform MCP as the source of truth. OAuth supplies identi
 3. Call `preview_sales_order` first for every order path. Show the complete source, customer, opportunity, order number, terms, lines, totals, evidence, and preview expiry. The preview does not create an order.
 4. Only after exact user confirmation, pass the returned preview token unchanged to `create_sales_order` with `confirmed: true`. Never reconstruct or edit a signed preview token.
 5. A successful sales order is the only fact in this workflow that marks its opportunity won. Report the order creation and resulting opportunity status together.
+
+For a style-scoped quotation, each PI or order line must specify one actual `styleVariantId` from the frozen quotation scope, its explicit quantity and unit. Show the corresponding color and size. Do not invent quantity allocations, choose an arbitrary first variant, or use a style reference as a substitute for a formal variant. Variants outside the accepted scope require a separately agreed quotation revision. Orders and downstream material requirements retain individual formal variant identities; the pricing scope is not an order-line identity.
 
 ## Gmail or Outlook Loop
 
@@ -83,9 +89,9 @@ Obtain exact user confirmation for each write. Restate the target and complete c
 - Before `add_sample_version`, show the exact sample request, version label, change summary, and evidence reference.
 - Before `record_sample_feedback`, show the exact sample request and version, verdict, summary, evidence reference, and received time. Supply a stable `idempotencyKey`; reuse the same key after an uncertain or failed response, and use a new key only for a new feedback fact.
 - Before `record_sample_shipment`, show the exact sample request and version, carrier, tracking number and URL, recipient, and shipped time. Supply a stable `idempotencyKey`; reuse the same key after an uncertain or failed response, and use a new key only for a new shipment fact.
-- Before `create_costing_sheet`, show the exact customer, opportunity, optional sample, title, product reference, currency, every cost component, evidence reference, and notes.
+- Before `create_costing_sheet`, show the exact customer, opportunity, optional sample, title, product reference, formal style version and applicable variants when present, currency, every cost component, evidence reference, and notes.
 - Before `update_costing_sheet`, re-read the current costing version, then show the current and proposed currency, every component, evidence reference, notes, and expected version.
-- Before `create_quotation`, show the exact customer, opportunity, costing-sheet version, title, cost snapshot, currency and exchange rate, Incoterm, MOQ, lead time, payment terms, validity, every price tier and projected margin, notes, and evidence reference.
+- Before `create_quotation`, show the exact customer, opportunity, costing-sheet version, title, cost snapshot and applicable variant scope, currency and exchange rate, Incoterm, MOQ, lead time, payment terms, validity, every price tier and projected margin, notes, and evidence reference.
 - Before `add_quotation_version`, call `get_quotation`, then show the exact quotation, latest saved version, new costing snapshot, complete proposed terms, price tiers, evidence, and change summary. This appends a draft and never replaces history.
 - Before `update_quotation_version`, call `get_quotation`, verify that the target version is still a draft, then show its current revision and every proposed field.
 - Before `mark_quotation_version_sent`, call `get_quotation`, show the exact draft version and send time, and explain that this only records a confirmed external send. It does not send email.
