@@ -15,9 +15,17 @@ test("remote MCP authentication is deferred until first use", () => {
 });
 
 test("repair instructions require the current release and policy", () => {
-  assert.equal(plugin.version, "0.6.2+codex.20260906185425");
+  assert.equal(plugin.version, "0.6.2+codex.20260907062236");
+  assert.ok(readme.includes(plugin.version));
   assert.match(readme, /codex plugin marketplace upgrade hollydare/);
   assert.match(readme, /codex plugin remove foreign-trade-ai@hollydare/);
   assert.match(readme, /authPolicy.*ON_USE/);
   assert.match(readme, /完全退出并重新打开 Codex/);
+});
+
+test("product development guidance includes controlled technical version publication", () => {
+  const skill = readFileSync("plugins/foreign-trade-ai/skills/product-development-assistant/SKILL.md", "utf8");
+  for (const capability of ["create_size_chart_draft", "preview_publish_size_chart", "publish_size_chart", "sizeRatio", "evidenceReference", "construction", "labeling", "packaging", "specialProcesses"]) {
+    assert.ok(skill.includes(capability), `missing ${capability}`);
+  }
 });

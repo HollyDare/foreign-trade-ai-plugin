@@ -1,6 +1,6 @@
 ---
 name: product-development-assistant
-description: Guide authenticated business users through garment style and material records, explicit BOM color-size applicability, technical-file versions, order-specific technical requirements, and traceable material requirements from confirmed sales orders. Use for product development and BOM work, not CRM outreach or warehouse and financial posting.
+description: Guide authenticated business users through garment style and material records, versioned size charts and style size ratios, explicit BOM color-size applicability, technical-file versions, order-specific technical requirements, and traceable material requirements from confirmed sales orders. Use for product development and BOM work, not CRM outreach or warehouse and financial posting.
 ---
 
 # Product Development Assistant
@@ -12,13 +12,21 @@ Use the platform MCP for authoritative records and controlled writes. Codex orga
 1. Call `list_product_lines`, show the returned company and relevant product lines, and obtain explicit target confirmation before `select_product_line_context` with `confirmed: true`.
 2. Pass its `contextToken` unchanged to product-development, sales, and procurement tools. Never display or log it. Repeat selection on context expiry; reconnect OAuth only for missing OAuth authorization.
 3. Use `search_styles`, then `get_style_specification`, to discover actual style IDs, versions, colors, sizes, and formal variants. Use `search_materials` for existing material IDs and units before proposing new materials. Do not reconstruct IDs from codes, names, URLs, another task, or a source spreadsheet.
-4. Read `get_published_product_assets` or `get_bom` to distinguish drafts from published versions. Use only returned `links.productDevelopment`, `links.procurement`, or sales links. Never construct platform URLs or use database/HTTP/page automation to replace a missing business tool.
+4. Read `get_size_chart` and `get_published_product_assets` or `get_bom` to distinguish drafts from published versions. Use only returned `links.productDevelopment`, `links.procurement`, or sales links. Never construct platform URLs or use database/HTTP/page automation to replace a missing business tool.
 
 ## Prepare Product Facts
 
 Before `create_style_draft` or `create_material`, show the complete proposed fields and source references, including missing or conflicting values, and obtain exact confirmation. Keep a stable idempotency key for the same action after an uncertain response. Do not create duplicates to recover an existing record.
 
 Keep customer style numbers, product colors, material colors, measurements, and material dimensions distinct. A silver reflective tape or black size label does not imply a silver or black garment. Measurement values require an explicit supported unit; absent values are not zero. A material's reference loss rate is not approval to use it on a BOM line.
+
+## Prepare A Size Chart
+
+Read the style and current size-chart versions first. Before `create_size_chart_draft`, show the unit, frozen style sizes, every measurement point, method, minus/plus tolerances, values, source references, unresolved cells, and any proposed style-level `sizeRatio`. Use `null` for an unknown measurement; never send zero, omit a known conflict, add a size not returned by the style, or infer a unit from value magnitude. The platform snapshots the style's current size identities, so review the returned sizes before publication.
+
+A supplied `sizeRatio` is a reusable product fact, not an order quantity. Its `parts` must contain every returned style size exactly once with nonnegative integers and at least one positive value; zero means the source explicitly excludes that size. Cite the exact source in `evidenceReference`. If the source only provides color-size order quantities, a purchase-contract quantity table, carton packing such as `2/10`, or contradictory totals, leave `sizeRatio` absent and report the evidence instead of reducing, normalizing, or promoting it to a style default.
+
+Call `preview_publish_size_chart`, show the complete version and expiry, and obtain separate exact confirmation before `publish_size_chart` with the unchanged preview token, expected version, stable idempotency key, and `confirmed: true`. A style must already be published. A changed method, tolerance, size coverage, value, or size ratio requires a new size-chart draft and publication; never overwrite or relabel a published version. Read the published result afterward and report its actual version and page link.
 
 ## Prepare A BOM
 
@@ -32,13 +40,21 @@ Read the style and materials first. Show each material, position or purpose, con
 
 The server freezes `styleVersion` and each line's `applicableStyleVariants`. Review those returned snapshots. Editing a draft requires its current `expectedRevision`; a stale revision requires rereading and a new confirmation. For a draft created in this workflow, retain its returned ID and revision; `get_bom` reads a published BOM, not an arbitrary draft. Do not claim you recovered a draft unless a tool actually returned it.
 
+## Prepare A Tech Pack
+
+Read the style, current published assets, and supplied technical sources first. Separate reusable style requirements from order numbers, barcodes, customer-specific packing quantities, complaints, sample approvals, and other order-only facts. Before `create_tech_pack_draft`, show the file reference and all four content sections: `construction`, `labeling`, `packaging`, and `specialProcesses`.
+
+Every stored requirement needs a stable unique `code`, a concrete `requirement`, and an exact `evidenceReference`. Also provide `operation` for construction, `labelType`, `specification`, `color`, and `placement` for labeling, `material` for packaging, and `processType` for special processes. Submit all four arrays and at least one evidenced item; an empty array means that the source did not establish a reusable requirement in that section.
+
+Report contradictory sources before creating the draft. Do not silently select one carton quantity, label position, process instruction, or other conflicting value. Leave the disputed section empty until the user supplies or confirms authoritative evidence, while preserving the conflict in the working document. Show the complete proposed structured content and obtain exact confirmation before calling `create_tech_pack_draft` with `confirmed: true` and a stable idempotency key.
+
 ## Publish Versions
 
-For a style, BOM, or technical-file version, call the matching `preview_publish_style`, `preview_publish_bom_version`, or `preview_publish_tech_pack` first. Show the returned complete preview, frozen applicability, revision or version, and expiry. Obtain separate exact confirmation before the matching publish tool with the unchanged preview token, expected revision/version, stable idempotency key, and `confirmed: true`.
+For a style, size chart, BOM, or technical-file version, call the matching preview tool first. Show the returned complete preview, frozen sizes or applicability, revision or version, and expiry. Obtain separate exact confirmation before the matching publish tool with the unchanged preview token, expected revision/version, stable idempotency key, and `confirmed: true`.
 
 Do not publish an unspecified or mismatched scope, bypass a readiness error, edit a signed token, or overwrite a published version. A changed material set, consumption, or applicability requires a new BOM draft and a separately confirmed publication. Read the published result afterward and report the actual version and page link.
 
-`create_tech_pack_draft` stores a supplied technical file reference and notes. Publishing that reference does not prove every measurement, label, packaging instruction, sample approval, or production requirement is complete. Report unsupported structured fields and unresolved source conflicts separately.
+`create_tech_pack_draft` stores the supplied technical file reference, notes, and evidenced structured requirements. Publishing a Tech Pack makes only that saved version available as a common style asset; it does not prove missing sections, measurements, sample approval, inspection, or production readiness. The product-development page is a read-only display for the published structured Tech Pack, so create and publish it through the controlled MCP preview and confirmation flow.
 
 ## Adopt Technical Requirements For An Order
 
