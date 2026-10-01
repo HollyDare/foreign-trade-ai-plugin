@@ -15,7 +15,7 @@ test("remote MCP authentication is deferred until first use", () => {
 });
 
 test("repair instructions require the current release and policy", () => {
-  assert.equal(plugin.version, "0.6.2+codex.20260907062236");
+  assert.equal(plugin.version, "0.8.1+codex.2026100101");
   assert.ok(readme.includes(plugin.version));
   assert.match(readme, /codex plugin marketplace upgrade hollydare/);
   assert.match(readme, /codex plugin remove foreign-trade-ai@hollydare/);
@@ -28,4 +28,13 @@ test("product development guidance includes controlled technical version publica
   for (const capability of ["create_size_chart_draft", "preview_publish_size_chart", "publish_size_chart", "sizeRatio", "evidenceReference", "construction", "labeling", "packaging", "specialProcesses"]) {
     assert.ok(skill.includes(capability), `missing ${capability}`);
   }
+});
+
+test("acquisition guidance ends at CRM admission", () => {
+  const skill = readFileSync("plugins/foreign-trade-ai/skills/acquisition-assistant/SKILL.md", "utf8");
+  const workflow = readFileSync("plugins/foreign-trade-ai/skills/acquisition-assistant/references/acquisition-workflow.md", "utf8");
+  assert.match(workflow, /start_codex_acquisition/);
+  assert.match(skill, /Do not generate outreach drafts or send emails here/);
+  assert.doesNotMatch(workflow, /## Outreach drafts/);
+  assert.match(workflow, /those activities in the CRM workflow/);
 });
