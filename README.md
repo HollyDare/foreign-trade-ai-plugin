@@ -17,7 +17,7 @@ https://github.com/HollyDare/foreign-trade-ai-plugin
 2. 使用当前 Codex Desktop 实际使用的 codex CLI，确认命令写入的是该 Desktop 正在读取的 Codex 配置目录。
 3. 添加这个 Codex 插件 marketplace；如果 hollydare 已存在，运行 codex plugin marketplace upgrade hollydare --json 更新 Git 快照。
 4. 如果插件已安装，移除旧的 foreign-trade-ai@hollydare 后重新安装 foreign-trade-ai@hollydare。
-5. 确认安装版本和远程 MCP 地址。运行 codex plugin list --json，只有 foreign-trade-ai@hollydare 显示 installed=true、enabled=true、版本不低于 0.8.1+codex.2026100101、authPolicy=ON_USE，且 .mcp.json 仍指向 https://hollydare.cloud/api/mcp，才算安装完成。
+5. 确认安装版本和远程 MCP 地址。运行 codex plugin list --json，只有 foreign-trade-ai@hollydare 显示 installed=true、enabled=true、版本不低于 0.8.2+codex.2026100102、authPolicy=ON_USE，且 .mcp.json 仍指向 https://hollydare.cloud/api/mcp，才算安装完成。
 6. 安装完成后告诉我需要完全退出并重新打开 Codex 桌面应用，再新建一个 Codex 任务；首次使用时完成平台 OAuth 登录。
 7. 不要向我索取平台密码、MIC 密码、API Key 或 Cookie，也不要索取 OAuth token。
 ```
@@ -30,7 +30,7 @@ codex plugin marketplace upgrade hollydare --json
 codex plugin add foreign-trade-ai@hollydare
 ```
 
-修复旧安装时，在更新 marketplace 后先执行 `codex plugin remove foreign-trade-ai@hollydare --json`，再重新安装。`codex plugin list --json` 必须显示插件已安装、已启用、版本不低于 `0.8.1+codex.2026100101`，并且 `authPolicy` 为 `ON_USE`。
+修复旧安装时，在更新 marketplace 后先执行 `codex plugin remove foreign-trade-ai@hollydare --json`，再重新安装。`codex plugin list --json` 必须显示插件已安装、已启用、版本不低于 `0.8.2+codex.2026100102`，并且 `authPolicy` 为 `ON_USE`。
 
 安装完成后完全退出并重新打开 Codex，再新建一个任务，使插件和 MCP 配置生效。首次使用平台能力时完成 OAuth 登录。
 
@@ -78,3 +78,5 @@ codex plugin add foreign-trade-ai@hollydare
 - 公司和当前产品线身份只来自平台 OAuth，不接受工具参数覆盖。
 - 写操作必须先展示目标和影响，并由用户明确确认。
 - 插件仓库不包含平台源码、账号、密码、API Key、Cookie、令牌或环境配置。
+
+ERP 助手以提供的《服装外贸公司 ERP 核心模块 & 内部数据清单》为业务基线，覆盖 13 模块导航和现有采购、到货、IQC、印花/染色/绣花外发 MCP 流程。生产、WMS、船务、财务和完整统计报表缺少对应 MCP 时，仅整理证据与待确认方案，不宣称完成业务入账。CRM 新增联系人、活动、跟进任务与商机使用稳定幂等键；不确定结果重试时保留原键和完整内容。

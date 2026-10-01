@@ -74,6 +74,8 @@ For a style-scoped quotation, each PI or order line must specify one actual `sty
 
 ## Make Confirmed Updates
 
+For `create_customer_contact`, `record_activity`, `create_follow_up_task`, and `create_opportunity`, generate one stable `idempotencyKey` for the exact confirmed intent before calling the tool. Retain it with the full payload and reuse both after a timeout or uncertain result. A new business fact gets a new key; a changed customer, content, assignee, date, or first task is a new intent requiring the revised confirmation. On `CRM_IDEMPOTENCY_CONFLICT`, stop and reconcile the saved facts; never change the key merely to bypass the conflict.
+
 Obtain exact user confirmation for each write. Restate the target and complete content before passing `confirmed: true`.
 
 - Before `record_activity`, show the exact customer, activity type, factual summary, and occurrence context. Do not record a draft, planned contact, or AI inference as an activity that already happened.

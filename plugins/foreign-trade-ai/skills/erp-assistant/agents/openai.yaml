@@ -1,0 +1,4 @@
+interface:
+  display_name: "服装外贸 ERP 助手"
+  short_description: "按 ERP 文档串联销售订单、BOM、采购、到货与 IQC，说明未接通的业务流程"
+  default_prompt: "使用 $erp-assistant 核对当前产品线的订单和 ERP 流程，按 ERP.pdf 整理业务资料、检查工具覆盖，并在我确认后保存支持的操作。"
